@@ -19,72 +19,356 @@ tidy=TRUE, tidy.opts=list(width.cutoff=60), R.options=list(max.print=100))
 
 ## Data Wrangling, Exploration, Visualization
 
-### Name and EID here
+### Mark Moreno and mam24932 here
 
 #### Introduction 
-
+In this project I chose to use football data more specifically I am trying to use data of how good a team was (their ranking) and combine it with a dataset involving their sports betting data to see which teams are the best to bet on and if there are any other factors like weather that could play a role in how the over under is calculated and if there really is a way to beat oddsmakers at their own game. The standings dataset is a set of standings for all 32 NFL teams. I will be taking out data from before 2011 because this data set is huge. The same goes fro the spreadspoke_scores dataset it is a large dataset with many different variables with the scores and betting data from every NFL game since the 1960's. I also chose to shorten this to 2011 to make it more manageable to work with. I had to manually hard code with str_replace() the names to abbreviations to fit the standings dataset. Looking back I could have just joined a dataset with abbreviations so I will do that next time. My analysis will mostly center around over/under bets which is a pretty easy concept. If the two teams combine for more points than the line the over wins, if not then the under wins. 
 Paragraph or two introducing your datasets and variables, why they are interesting to you, etc.
 
 ```{R}
-# read your datasets in here, e.g., with read_csv()
+library(tidyverse)
+library("gt")
+library("ggplot2")
+#or, if you'd prefer to read it in from some remote location
+
+standings <- read_csv("http://www.habitatring.com/standings.csv")
+spreadspoke_scores <- read_csv("/stor/home/mam24932/project1/spreadspoke_scores.csv")
+
+spreadspoke_scores<- spreadspoke_scores %>% filter(schedule_season>2010) # Took out prior to 2011 data 10
+standings<- standings %>% filter(season>2010) #Took out prior to 2011 data 10
+spreadspoke_scores <- as_tibble(spreadspoke_scores)
+
+#changing names to abbreviations to fit other dataset home teams 
+
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="Dallas Cowboys", replacement = "DAL"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="Green Bay Packers", replacement = "GB"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="Miami Dolphins", replacement = "MIA"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="Arizona Cardinals", replacement = "ARI"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="Baltimore Ravens", replacement = "BAL"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="Chicago Bears", replacement = "CHI"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="Cleveland Browns", replacement = "CLE"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="Houston Texans", replacement = "HOU"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="San Francisco 49ers", replacement = "SF"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="Kansas City Chiefs", replacement = "KC"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="St. Louis Rams", replacement = "STL"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="Tampa Bay Buccaneers", replacement = "TB"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="Washington Redskins", replacement = "WAS"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="Jacksonville Jaguars", replacement = "JAX"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="New York Jets", replacement = "NYJ"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="Buffalo Bills", replacement = "BUF"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="Denver Broncos", replacement = "DEN")) ###
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="San Diego Chargers", replacement = "SD"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="Indianapolis Colts", replacement = "IND"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="Atlanta Falcons", replacement = "ATL"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="Oakland Raiders", replacement = "OAK"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="Carolina Panthers", replacement = "CAR"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="Detroit Lions", replacement = "DET"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="Minnesota Vikings", replacement = "MIN"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="New York Giants", replacement = "NYG"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="New Orleans Saints", replacement = "NO"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="New England Patriots", replacement = "NE"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="Pittsburgh Steelers", replacement = "PIT"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="Philadelphia Eagles", replacement = "PHI"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="Seattle Seahawks", replacement = "SEA"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="Cincinnati Bengals", replacement = "CIN"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="Tennessee Titans", replacement = "TEN"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="Los Angeles Chargers", replacement = "LAC"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="Los Angeles Rams", replacement = "LAR"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="Washington Football Team", replacement = "WAS"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_home= str_replace(team_home,pattern ="Las Vegas Raiders", replacement = "OAK"))
+###changing names of away teams 
+
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="Dallas Cowboys", replacement = "DAL"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="Green Bay Packers", replacement = "GB"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="Miami Dolphins", replacement = "MIA"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="Arizona Cardinals", replacement = "ARI"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="Baltimore Ravens", replacement = "BAL"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="Chicago Bears", replacement = "CHI"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="Cleveland Browns", replacement = "CLE"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="Houston Texans", replacement = "HOU"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="San Francisco 49ers", replacement = "SF"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="Kansas City Chiefs", replacement = "KC"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="St. Louis Rams", replacement = "STL"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="Tampa Bay Buccaneers", replacement = "TB"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="Washington Redskins", replacement = "WAS"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="Jacksonville Jaguars", replacement = "JAX"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="New York Jets", replacement = "NYJ"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="Buffalo Bills", replacement = "BUF"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="Denver Broncos", replacement = "DEN")) ###
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="San Diego Chargers", replacement = "SD"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="Indianapolis Colts", replacement = "IND"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="Atlanta Falcons", replacement = "ATL"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="Oakland Raiders", replacement = "OAK"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="Carolina Panthers", replacement = "CAR"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="Detroit Lions", replacement = "DET"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="Minnesota Vikings", replacement = "MIN"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="New York Giants", replacement = "NYG"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="New Orleans Saints", replacement = "NO"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="New England Patriots", replacement = "NE"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="Pittsburgh Steelers", replacement = "PIT"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="Philadelphia Eagles", replacement = "PHI"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="Seattle Seahawks", replacement = "SEA"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="Cincinnati Bengals", replacement = "CIN"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="Tennessee Titans", replacement = "TEN"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="Los Angeles Chargers", replacement = "LAC"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="Los Angeles Rams", replacement = "LAR"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="Washington Football Team", replacement = "WAS"))
+spreadspoke_scores <- spreadspoke_scores %>% mutate(team_away= str_replace(team_away,pattern ="Las Vegas Raiders", replacement = "OAK"))
+
+
 
 ```
 
 #### Tidying: Reshaping
 
-If your datasets are tidy already, demonstrate that you can reshape data with pivot wider/longer here (e.g., untidy and then retidy). Alternatively, it may be easier to wait until the wrangling section so you can reshape your summary statistics. Note here if you are going to do this.
+If your datasets are tidy already, demonstrate that you can reshape data with pivot wider/longer here (e.g., untidy and then retidy). Alternatively, it may be easier to wait until the wrangling section so you can reshape your summary statistics. Note here if you are going to do this. I will be reshaping my summary stats. My data was already tidy will use pivot_longer on some of the summary stats
 
 ```{R}
-# your tidying code (if applicable; can also wait until wrangling section)
+
 ```
 
     
 #### Joining/Merging
 
 ```{R}
-# your joining code
+#creating new team var
+standings$team2
+standings <- standings %>% mutate(team2=team)
+
+spreadspoke_scores<- spreadspoke_scores%>% rename_(team ="team_home")
+spreadspoke_scores<- spreadspoke_scores%>% rename_(team2 ="team_away")
+spreadspoke_scores<- spreadspoke_scores%>% rename_(season ="schedule_season")
+projectdata <- left_join(y= standings,x= spreadspoke_scores,by = c("season","team"))
+#data questions for joining
+nrow(standings)
+nrow(spreadspoke_scores)
+standings %>% group_by(team) %>% n_distinct() # there are 32 teams and 10 seasons this makes sense even though at first I thought it should be 32 however each season has different data 
+spreadspoke_scores %>% group_by(team) %>% n_distinct() ### every game is different so each is unique 
+
+standings %>% group_by(team) %>% count()
+spreadspoke_scores %>% group_by(team)%>% count()
+###only one missing is the Las Vegas Raiders we lost only a season of raiders games 
+###the other 34 out of the 35 teams were in both datasets
 
 # your joining code
 ```
 
 Discussions of joining here. Feel encouraged to break up into more than once code chunk and discuss each in turn.
+First, I wanted to make sure I had two variables of the same name so I created a new column in my standings dataset to play the role of the away team when I merge. I then changed the variable names using the rename() function so I could join them using a string. I then used a left join to join these two data sets with two conditions "season" and "team" this allowed me to properly sort my team data that changes every season for every team. I used a left_join to not duplicate the team and season data onto the dataset but still merge the ranking data and the betting data. I then took some statistics of my data to see how my two datasets were the same and different. There are 32 teams and 10 seasons making the nrow() value of 320 make sense because every season is different. The same can be said about my betting data because no game is the same every row is it's own unique value. Seasons was the same for each dataset however, the teams were not. The Las Vegas Raiders had not been added to the standings dataset since they have only been a team since 2020. We only lost a seasons worth of value here. I deemed this to be alright because it would only amount to 8 games. It only amounts to 8 games because I only included the home teams in my join. This accounts for things like home_field advantage. 
 
-####  Wrangling
 
 ```{R}
-# your wrangling code
+projectdata<- projectdata %>% mutate(over_under_lineTotal = score_home+score_away) ## computes the over/under total
+projectdata<- projectdata %>% mutate(over_under_lineWinorLose = (over_under_lineTotal>over_under_line))
 
+projectdata<-projectdata %>% group_by(team) %>% mutate(totalnumofwins = cumsum(over_under_lineWinorLose)) ### rankings of which teams hit the over most often 
+projectdata<-projectdata %>% filter(stadium_neutral==F) ##filtering out neutral site games 
+# projectdata %>% filter(schedule_playoff ==F)
+projectdata$gamecount = 1
+projectdata<-projectdata %>% group_by(team) %>% mutate(totalgamesplayed = cumsum(gamecount))
+
+projectdata<- projectdata %>% mutate(overpercentwinning = (totalnumofwins/totalgamesplayed))
+
+```
+
+I wanted to make my data analysis easier so I used mutate() to add a column of the total score of the game which is used in the over/under calculation. I then made a logical vector with it to see if the over won. I also made a running total of the data to show the amount of times the over won and how many games were played. I then created another column which gave me a running percentage of the over winning by dividing the two running totals.
+
+```{R}
+
+projectdatafinal <- projectdata  %>% select(c(1:9,11:15,23:29,32:35,37:38)) ###final data set taking out extraneous information
+totalwinsNFL <- projectdata %>% arrange(desc(totalnumofwins))%>% group_by(team) %>% summarise(dplyr::first(totalnumofwins))
+totalgamesNFL <- projectdata %>% arrange(desc(totalgamesplayed))%>% group_by(team) %>% summarise(dplyr::first(totalgamesplayed))
+
+
+projectdatafinal2<- left_join(totalwinsNFL,projectdatafinal) ### total number of overs cashing not a running list like the cumsum
+projectdatafinal3<- left_join(totalgamesNFL,projectdatafinal2)  ### total number of games played not a running list like the cumsum
+
+projectdatafinal3<- projectdatafinal3 %>% rename_(Totalgamesplayedfinal = 2)
+projectdatafinal3<- projectdatafinal3 %>% rename_(numberofoversfinal = 3)
+projectdatafinal3<- projectdatafinal3 %>% mutate(overpercentwinningfinal = (numberofoversfinal/Totalgamesplayedfinal)) #created a percentage of final totals instead of a running count for data analysis
+projectdatafinal <- projectdatafinal3
+
+```
+For the final part of my joining I selected only the rows which were neccessary. This included variables like the weather while losing this like wins and losses which are apart of the winning percentage. I then made two new variables which was the total number of games and overs winning for each team. As you can see I arranged the data from highest to lowest and grouped it by team before I took the first value of each team which was the end value of the cumsum() of each of these values. I then joined these with the projectdatafinal dataset to add them to my main dataset. I then renamed these values and created a final percentage instead of a running total. This would be useful for things like seeing which team was the best at beating the over/under for the 10 year span. 
+
+
+
+
+####  Wrangling
+```{R}
+sumtable1<- projectdatafinal %>% ungroup() %>% summarise_at(c("weather_temperature", "overpercentwinningfinal","weather_wind_mph","over_under_line"), mean, na.rm = TRUE)
+sumtable2<- projectdatafinal %>% ungroup() %>% summarise_at(c("weather_temperature", "overpercentwinningfinal","weather_wind_mph","over_under_line"), sd, na.rm = TRUE)
+sumtable3<- projectdatafinal %>% ungroup() %>% summarise_at(c("weather_temperature", "overpercentwinningfinal","weather_wind_mph","over_under_line"), var, na.rm = TRUE)
+sumtable4<- projectdatafinal %>% ungroup() %>% summarise_at(c("weather_temperature", "overpercentwinningfinal","weather_wind_mph","over_under_line"), quantile, na.rm = TRUE)
+method<-  c("mean","sd","var")
+sumtable1df<- data.frame(sumtable1,sumtable2,sumtable3)
+sumtable<- rbind(sumtable1,sumtable2,sumtable3)
+
+sumtable1final<- cbind(method,sumtable)
+sumtable1final<-as.data.frame(sumtable1final)
+options(scipen = 100)
+sumtable1final<- sumtable1final %>% pivot_longer(cols = 2:5,names_to = "statistic",values_to = "statisitcal value") ###tidy the dataframe
+
+sumtable1final %>% head()
+
+
+quartilepercent<- c(0,.25,.5,.75,1)
+quartilechart1 <- cbind(sumtable4,quartilepercent)
+quartilechart1 <- quartilechart1 %>% relocate(quartilepercent,before = 2) 
+
+quartilechart1 %>% head()
 # your wrangling code
 
 # your wrangling code
 ```
+This was the first summary table I made and the largest because it was not subset by team. Most of my data is much better understood when subset by team so I could only include these four values in my first summary table of raw ungrouped data. First I used ungroup() and summarise at to get tables of each of the individual data. Then using rbind() I bound each of these outputs by row. then using column bind I bound the method vector I created which was a concatenated vector of the statistical functions to the table of outputs. This gave me a data frame where the it was 3 rows long and 5 rows wide. I then used pivot longer to make my dataset longer making it tidy. I then piped it into head showing the final data of my first summary table. I also made a quick quartile chart so we could get a better idea of how my data would be split up
 
-Your discussion of wrangling section here. Feel encouraged to break up into more than once code chunk and discuss each in turn.
+
+```{R}
+
+fahrenheit_to_celsius <- function(x) {
+  temp_C <- (x - 32) * 5 / 9
+  return(temp_C)
+}
+
+
+tempfinal<- projectdatafinal %>% group_by(team) %>% summarise(meantemp = mean(weather_temperature,na.rm=T)) %>% mutate(meantempCelsius =fahrenheit_to_celsius(meantemp))
+tempfinal2<- projectdatafinal %>% group_by(team) %>% summarise(sdtemp = sd(weather_temperature,na.rm=T)) 
+tempfinal3<- projectdatafinal %>% group_by(team) %>% summarise(mintemp = min(weather_temperature,na.rm=T)) 
+tempfinal4<- projectdatafinal %>% group_by(team) %>% summarise(maxtemp = max(weather_temperature,na.rm=T)) 
+tempfinal5<- projectdatafinal %>% group_by(team) %>% summarise(IQRtemp = IQR(weather_temperature,na.rm=T)) 
+
+temptable<- inner_join(tempfinal,tempfinal2)
+
+temptable2<- inner_join(temptable,tempfinal3)
+temptable3<- inner_join(temptable2,tempfinal4)
+temptable4<- inner_join(temptable3,tempfinal5)
+
+gt(temptable4) %>%
+  tab_header(
+    title = md("**Summary of Tempature Data**"),)
+
+
+```
+For this next summary sheet I wanted to find the statistics of each individual team in terms of what conditions they usually played in at home. First, I created a function to change fahrenheit to celsius so the data can be accessible from wherever you may be accessing it. I then used it in conjunction with mutate to create a new column. Along with this I used various functions like mean,standard deviation, minimum, maximum and the interquartile range. Since they were grouped by team I was able to inner_join() them all together nice and easily each of the teams has its own unique abbreviation and I only wanted to keep what they had in common. I felt like these stats were of the best use to visualize differences in temperature throughout the season. Finally, I used the gt package to make it look nice! 
+
+```{R}
+
+sos0<- projectdatafinal %>% group_by(team) %>% summarise(meansos = mean(sos,na.rm=T)) 
+sos1<- projectdatafinal %>% group_by(team) %>% summarise(sdsos = sd(sos,na.rm=T)) 
+sos2<- projectdatafinal %>% group_by(team) %>% summarise(minsos = min(sos,na.rm=T)) 
+sos3<- projectdatafinal %>% group_by(team) %>% summarise(maxsos = max(sos,na.rm=T)) 
+sos4<- projectdatafinal %>% group_by(team) %>% summarise(IQRsos = IQR(sos,na.rm=T))
+
+soscomb1<-inner_join(sos0,sos1)
+soscomb2<-inner_join(sos2,sos3)
+soscomb3<-inner_join(soscomb2,soscomb1)
+soscombfinal<- inner_join(soscomb3,sos4)
+
+soscombfinal %>% head()
+
+pointsscored0<- projectdatafinal %>% group_by(team) %>% summarise(meanpointsscored = mean(scored,na.rm=T)) 
+pointsscored1<- projectdatafinal %>% group_by(team) %>% summarise(sdpointsscored = sd(scored,na.rm=T)) 
+pointsscored2<- projectdatafinal %>% group_by(team) %>% summarise(minpointsscored = min(scored,na.rm=T)) 
+pointsscored3<- projectdatafinal %>% group_by(team) %>% summarise(maxpointsscored = max(scored,na.rm=T)) 
+pointsscored4<- projectdatafinal %>% group_by(team) %>% summarise(IQRpointsscored = IQR(scored,na.rm=T))
+
+pointscomb1<-inner_join(pointsscored0,pointsscored1)
+pointscomb2<-inner_join(pointsscored2,pointsscored3)
+pointscomb3<-inner_join(pointscomb2,pointscomb1)
+pointscombfinal<- inner_join(pointscomb3,pointsscored4)
+
+##points per season summary table 4 
+pointscombfinal %>% head()
+
+
+overunder0<- projectdatafinal %>% group_by(team) %>% summarise(meanover_under_line = mean(over_under_line,na.rm=T)) 
+overunder1<- projectdatafinal %>% group_by(team) %>% summarise(sdover_under_line = sd(over_under_line,na.rm=T)) 
+overunder2<- projectdatafinal %>% group_by(team) %>% summarise(minover_under_line = min(over_under_line,na.rm=T)) 
+overunder3<- projectdatafinal %>% group_by(team) %>% summarise(maxover_under_line = max(over_under_line,na.rm=T)) 
+overunder4<- projectdatafinal %>% group_by(team) %>% summarise(IQRover_under_line = IQR(over_under_line,na.rm=T))
+
+overcomb1<-inner_join(overunder0,overunder1)
+overcomb2<-inner_join(overunder2,overunder3)
+overcomb3<-inner_join(overcomb1,overcomb2)
+overcombfinal<- inner_join(overcomb3,overunder4)
+
+###over under line 
+
+overcombfinal %>% head()
+
+```
+Like most data science projects accumulating data is very important. These next three summary tables I created were basically all the same code as I ran in the previous section however each looking at a different column of my project data. the first looking at strength of schedule per team, this helps see which teams played easier/harder teams. The second looking at the points scored in each season to see which teams scored the most points over the ten years of data. Finally, the last graph looks at the over under/line per team to see which teams had a lower or higher threshold to meet over these 10 seasons. See the previous paragraph to see how I used inner_join() to combine these stats into one table. 
+```{R}
+overunder0subset<- projectdatafinal %>% group_by(team,season) %>% summarise(meanover_under_line = mean(over_under_line,na.rm=T)) 
+overunder1subset<- projectdatafinal %>% group_by(team,season) %>% summarise(sdover_under_line = sd(over_under_line,na.rm=T)) 
+overunder2subset<- projectdatafinal %>% group_by(team,season) %>% summarise(minover_under_line = min(over_under_line,na.rm=T)) 
+overunder3subset<- projectdatafinal %>% group_by(team,season) %>% summarise(maxover_under_line = max(over_under_line,na.rm=T)) 
+overunder4subset<- projectdatafinal %>% group_by(team,season) %>% summarise(IQRover_under_line = IQR(over_under_line,na.rm=T))
+
+overcomb1subset<-inner_join(overunder0subset,overunder1subset)
+overcomb2subset<-inner_join(overunder2subset,overunder3subset)
+overcomb3subset<-inner_join(overcomb1subset,overcomb2subset)
+overcombfinalsubset<- inner_join(overcomb3subset,overunder4subset)
+
+
+##table summary showing how the line changes for a team in different seasons 
+overcombfinalsubset %>% head() 
+
+numofnas<- projectdatafinal %>% select(1,10,11,13,14,26) %>% summarise_all(funs(sum(is.na(.)))) ##count of na's in categorical values
+numofnas<- pivot_longer(numofnas,cols = 1:6,names_to = "Categorical Variable",values_to = "number of NA's")  
+categoricalvariabletotals <- projectdatafinal %>% select(1,10,11,13,14,26) %>% summarise_all(funs(dplyr::n()))
+categoricalvariabletotals <- pivot_longer(categoricalvariabletotals,cols = 1:6,names_to = "Categorical Variable",values_to = "categorical total")
+
+catdata<- inner_join(numofnas,categoricalvariabletotals) ###categorical data 
+catdata %>% head()
+
+```
+My last summary table is grouped by two variables instead of one. This allows me to see the fluctuations of the over/under line per season which can be really helpful because of the ups and downs of an NFL franchise. Looking at data on per season basis will allow you to get a much better feel for how good a certain team was in that particular time frame instead of the long-run like my previous statistics. The overall method was the same as the prior summary sheets, I chose these stats because I feel like they are the best for understanding data that is not very complicated. 
+
+In terms of categorical data I did not have much other than the home and away team, stadium, if it was a neutral site game and the boolean win or loss vector. I used select to "grab" my categorical values using summarise_all and sum(is.na(.)) to find the amount of NA's which were only seen in the favorite team id and the over/under win or loss boolean vector. This was because some of the games are from the 2021 season and this data has not been inputted yet. I again used pivot longer to tidy this data. 
 
 
 #### Visualizing
 
 ```{R}
-# your plot 1
+plot1 <- ggplot(data = projectdatafinal, aes(x = weather_temperature, y = over_under_line,color=div_rank),) + 
+   geom_point(size = 4, alpha = .4)+stat_summary(fun = mean, geom="line",color="red")+theme_classic()+scale_alpha_continuous()+
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 10))+
+  scale_y_continuous(breaks = scales::pretty_breaks(n = 10))+
+  labs(title = "graph of the over/under line by temperature and division ranking", x="Temperature (F)",y="Over/Under Line")
+
+plot1
 ```
 
-Your discussion of plot 1
+In this first plot I tried to see if there was a correlation between the weather and the line the oddsmaker take. I don't see any correlation between these two as the red line shows the mean and it seems like most of the data is centered around the mean. I also made the color division rank to see if bad teams or good teams for that matter got different odds. The only thing I could see is that the most of the highest over/under line values were black meaning that the games that are predicted to score the most points are the ones where the best team in the division is playing. 
 
 ```{R}
-# your plot 2
+
+plot2<- ggplot(data = projectdatafinal, aes(x = over_under_line,y=over_under_lineTotal)) + 
+    geom_bin2d(binwidth = c(1, 4))+theme_bw()+scale_alpha_continuous()+geom_rug(color="red",size=.255,)+
+ labs(title = "Density graph of the over_under line and the total points scored in the game", x="Over/Under line ",y="Total points score")+
+    scale_y_continuous(breaks = scales::pretty_breaks(n = 10))
+plot2
+
 ```
 
-Your discussion of plot 2
+In this plot I tried to get a feel for how most of the games ended up. In this graph we were able to see a large portion (blue area) finished with total points right around the line, This is good for Vegas as it makes it a virtually toss up. The geomrug() helps to follow up to find the point where people make money. If you bet the over of 50 all you have to do is follow the scores up from the x axis of 50 and as soon as you hit the 50 on the y axis anything above that is in the money!
+
 
 ```{R}
-# your plot 3
+plot3 <- ggplot(data = projectdatafinal, aes(x=over_under_lineWinorLose,y=over_under_lineTotal))+geom_violin()+geom_jitter(color="blue",alpha=.20)+
+  theme_light()+scale_alpha_discrete()+
+  labs(title = "Violin graph of the winners and losers based on the total points scored", x= "Outcome: FALSE= LOSS ,TRUE = WIN",y= "Total points scored")+
+   scale_y_continuous(breaks = scales::pretty_breaks(n = 10))
+plot3
 ```
 
-Your discussion of plot 3
+This is my favorite plot I made, mostly because it is so scary, this graph show the spread of the total number of points for each of the outcomes of gambling a Win or a Loss. As you can see the big bulges in each of the graphs are very close to one another. This means that whatever number they put as the odds, The game is likely to be right around the score. This makes a virtual toss-up and essentially gambling because they are so good at their job. The scarier part of the graph is how thin the tails on the violin's are. The odds they create can be really wrong, however it happens so frequently that no one would be able to use any type of statistic to their advantage. 
 
 #### Concluding Remarks
 
-If any!
+I had a couple other numerical variables but I did not really use those in any of my analysis so I did not create summary sheets for them. I feel like I ended up using everything that was asked of me it might not be in the right spot because I had to do lots of different things with my data. This project was tough but I really enjoyed it! Looking forward to part 2! 
 
 
 
